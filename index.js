@@ -21,11 +21,11 @@ app.use((req, _res, next) => {
   req.manager = manager;
   next();
 });
+app.use(createLog);
 
-app
-  .use(installLoginRouter)
-  .use(installPackInfoRouter)
-  .use(installTgzRouter)
-  .use(installPublishRouter)
-  .use(createLog)
-  .listen(process.env.SERVER_PORT, setup());
+installLoginRouter(app);
+installPackInfoRouter(app);
+installTgzRouter(app);
+installTgzRouter(installPublishRouter);
+
+app.listen(process.env.SERVER_PORT, setup());

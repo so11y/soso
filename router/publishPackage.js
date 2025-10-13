@@ -3,6 +3,7 @@ const { logger } = require("../helper/log");
 async function publishPackage(req, res) {
   const { packageName } = req.params;
   const { manager } = req;
+  console.log("x-x-");
 
   try {
     const packageData = req.body;
