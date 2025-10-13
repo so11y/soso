@@ -13,6 +13,7 @@ function getDayPath(_path = "") {
   return path.join(
     process.cwd(),
     PACK_DIR,
+    "day",
     dayjs().format("YYYY-MM-DD"),
     _path
   );
