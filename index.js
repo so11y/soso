@@ -26,6 +26,6 @@ app.use(createLog);
 installLoginRouter(app);
 installPackInfoRouter(app);
 installTgzRouter(app);
-installTgzRouter(installPublishRouter);
+installPublishRouter(app);
 
 app.listen(process.env.SERVER_PORT, setup());
