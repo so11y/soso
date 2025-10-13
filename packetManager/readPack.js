@@ -9,17 +9,11 @@ class ReadPack {
   }
 
   readInfo(packageName) {
-    const findPack = [
-      () => this.packetManager.getPublishedInfo(packageName),
-      () => {
-        const maybeHaveOutsidePackagePath = getOutlinePath(
-          path.join(packageName, "package.json")
-        );
-        return fs.existsSync(maybeHaveOutsidePackagePath);
-      }
-    ].find(Boolean);
+    const maybeHaveOutsidePackagePath = getOutlinePath(
+      path.join(packageName, "package.json")
+    );
 
-    if (!findPack) {
+    if (!fs.existsSync(maybeHaveOutsidePackagePath)) {
       throw new Error("package not found");
     }
 

@@ -6,9 +6,11 @@ const { OUTLINE_DIR, LOCAL_DIR, PACK_DIR, PUBLISH_DIR } = require("./const");
 function getOutlinePath(_path = "") {
   return path.join(process.cwd(), PACK_DIR, OUTLINE_DIR, _path);
 }
+
 function getLocalPath(_path = "") {
   return path.join(process.cwd(), PACK_DIR, LOCAL_DIR, _path);
 }
+
 function getDayPath(_path = "") {
   return path.join(
     process.cwd(),

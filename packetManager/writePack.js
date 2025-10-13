@@ -38,9 +38,12 @@ class WritePack {
   }
 
   async writeInfo(packageName) {
-    const hasLocalPublish = this.packetManager.getPublishedInfo(packageName);
+    const hasLocalPublish = await this.packetManager.getPublishedInfo(
+      packageName
+    );
     if (hasLocalPublish) {
-      return hasLocalPublish;
+      overwriteTarBall(packageInfo);
+      return JSON.stringify(packageInfo);
     }
 
     const { data: packageInfo } = await requireImpl.get(packageName);
