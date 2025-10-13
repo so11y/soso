@@ -8,6 +8,7 @@ const { createLog } = require("./helper/log");
 const packageManager = require("./packetManager");
 
 const app = express();
+const listener = setup();
 
 const manager = new packageManager();
 
@@ -28,4 +29,4 @@ installPackInfoRouter(app);
 installTgzRouter(app);
 installPublishRouter(app);
 
-app.listen(process.env.SERVER_PORT, setup());
+app.listen(process.env.SERVER_PORT, listener);
