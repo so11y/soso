@@ -1,6 +1,9 @@
+const { logger } = require("../helper/log");
+
 module.exports = {
   installSecurityRouter(app) {
     app.post("/-/npm/v1/security/audits/quick", (req, res) => {
+      logger.info("/-/npm/v1/security/audits/quick");
       res.json({
         actions: [],
         advisories: {},
@@ -21,12 +24,15 @@ module.exports = {
       });
     });
     app.get("/-/npm/v1/security/advisories/bulk", (req, res) => {
+      logger.info("/-/npm/v1/security/advisories/bulk");
       res.json({});
     });
     app.post("/-/npm/v1/security/advisories/bulk", (req, res) => {
+      logger.info("/-/npm/v1/security/advisories/bulk");
       res.json({});
     });
     app.post("/-/npm/v1/security/audits/bulk", (req, res) => {
+      logger.info("/-/npm/v1/security/audits/bulk");
       res.json({});
     });
   }
