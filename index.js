@@ -4,6 +4,7 @@ const { installPackInfoRouter } = require("./router/getPackageInfo");
 const { installTgzRouter } = require("./router/getPackageTgz");
 const { installPublishRouter } = require("./router/publishPackage");
 const { installLoginRouter } = require("./router/login");
+const { installSecurityRouter } = require("./router/security");
 const { createLog } = require("./helper/log");
 const packageManager = require("./packetManager");
 
@@ -28,5 +29,6 @@ installLoginRouter(app);
 installPackInfoRouter(app);
 installTgzRouter(app);
 installPublishRouter(app);
+installSecurityRouter(app);
 
 app.listen(process.env.SERVER_PORT, listener);
