@@ -65,6 +65,7 @@ function overwriteTarBall(packageInfo, SERVER_IP = process.env.SERVER_IP) {
       version
     ].dist.tarball = `${SERVER_IP}/package/${source.name}/${version}`;
   });
+  return packageInfo;
 }
 
 module.exports = {

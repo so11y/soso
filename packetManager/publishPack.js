@@ -3,7 +3,7 @@ const fs = require("fs-extra");
 const { cratePerVersionJson } = require("../helper/publish");
 const { getOutlinePath, getPublishPath } = require("../helper/share");
 const { logger } = require("../helper/log");
-const { createSymLinkSync, publishSymLinkSync } = require("../helper/effect");
+const { publishSymLinkSync, overwriteTarBall } = require("../helper/effect");
 
 class PublishPack {
   constructor(packetManager) {
@@ -19,7 +19,13 @@ class PublishPack {
     fs.ensureDirSync(packageDir);
 
     // 写入 package.json
-    await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+    await fs.writeJson(
+      packageJsonPath,
+      overwriteTarBall(packageJson, process.env.INSIDE_SERVER_IP),
+      {
+        spaces: 2
+      }
+    );
 
     // 处理 tarball 附件
     const tarballName = Object.keys(packageData._attachments)[0];

@@ -42,19 +42,19 @@ class WritePack {
       packageName
     );
     if (hasLocalPublish) {
-      overwriteTarBall(packageInfo);
-      return JSON.stringify(packageInfo);
+      return JSON.stringify(overwriteTarBall(packageInfo));
     }
 
     const { data: packageInfo } = await requireImpl.get(packageName);
-    overwriteTarBall(packageInfo);
-    const jsonInfo = JSON.stringify(packageInfo);
+    const jsonInfo = JSON.stringify(overwriteTarBall(packageInfo));
     const hasCache = hasOutside(packageName);
-    const writeInfoToFastLocal = JSON.parse(jsonInfo);
-    overwriteTarBall(writeInfoToFastLocal, process.env.INSIDE_SERVER_IP);
     await this.writeOutlineInfo(
       packageName,
-      JSON.stringify(writeInfoToFastLocal, null, 4)
+      JSON.stringify(
+        overwriteTarBall(JSON.parse(jsonInfo), process.env.INSIDE_SERVER_IP),
+        null,
+        4
+      )
     );
     if (!hasCache) {
       daySymLinkSync(packageName);
