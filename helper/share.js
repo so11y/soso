@@ -36,13 +36,17 @@ function hasOutside(packageName, version) {
 
 function getTgzPath(packageName, version) {
   const packageNowPath = path.join(packageName, `${version}.tgz`);
-  const maybeHaveInsidePackagePath = getLocalPath(packageNowPath);
+  // const maybeHaveInsidePackagePath = getLocalPath(packageNowPath);
   const maybeHaveOutsidePackagePath = getOutlinePath(packageNowPath);
   const hasExist = [
-    maybeHaveOutsidePackagePath,
-    maybeHaveInsidePackagePath
+    maybeHaveOutsidePackagePath
+    // maybeHaveInsidePackagePath
   ].find(fs.existsSync);
-  return [hasExist, maybeHaveOutsidePackagePath, maybeHaveInsidePackagePath];
+  return [
+    hasExist,
+    maybeHaveOutsidePackagePath
+    // maybeHaveInsidePackagePath
+  ];
 }
 
 function whereEnvironment(outsideCallback, insideCallback) {

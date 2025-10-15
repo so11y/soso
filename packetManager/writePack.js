@@ -13,7 +13,7 @@ const {
 const {
   createWriteStream,
   overwriteTarBall,
-  createSymLinkSync
+  daySymLinkSync
 } = require("../helper/effect");
 
 class WritePack {
@@ -25,17 +25,17 @@ class WritePack {
     return fs.outputFile(path.join(packPath, `package.json`), data);
   }
 
-  writeLocalInfo(packName, data) {
-    return this._writeInfo(getLocalPath(packName), data);
-  }
+  // writeLocalInfo(packName, data) {
+  //   return this._writeInfo(getLocalPath(packName), data);
+  // }
 
   writeOutlineInfo(packName, data) {
     return this._writeInfo(getOutlinePath(packName), data);
   }
 
-  writeTodayInfo(packName, data) {
-    return this._writeInfo(getDayPath(packName), data);
-  }
+  // writeTodayInfo(packName, data) {
+  //   return this._writeInfo(getDayPath(packName), data);
+  // }
 
   async writeInfo(packageName) {
     const hasLocalPublish = await this.packetManager.getPublishedInfo(
@@ -57,7 +57,7 @@ class WritePack {
       JSON.stringify(writeInfoToFastLocal, null, 4)
     );
     if (!hasCache) {
-      createSymLinkSync(packageName);
+      daySymLinkSync(packageName);
     }
     return jsonInfo;
   }
@@ -87,7 +87,7 @@ class WritePack {
           );
           pipe(downloadData);
           if (!hasOutside(packageName, version)) {
-            createSymLinkSync(packageName);
+            daySymLinkSync(packageName);
           }
           createStream(maybeHaveOutsidePackagePath);
           return maybeHaveOutsidePackagePath;

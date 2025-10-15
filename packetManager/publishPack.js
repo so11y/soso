@@ -3,6 +3,7 @@ const fs = require("fs-extra");
 const { cratePerVersionJson } = require("../helper/publish");
 const { getOutlinePath, getPublishPath } = require("../helper/share");
 const { logger } = require("../helper/log");
+const { createSymLinkSync, publishSymLinkSync } = require("../helper/effect");
 
 class PublishPack {
   constructor(packetManager) {
@@ -57,19 +58,15 @@ class PublishPack {
         ].dist.tarball = `${process.env.SERVER_IP}/package/${packageName}/${version}`;
       });
 
-      // 同时发布到 publish 目录和 pack/outline 目录
-      await Promise.all([
-        this.writeFile({
-          packageData,
-          packageJson,
-          packageDir: getPublishPath(packageName)
-        }),
-        this.writeFile({
-          packageData,
-          packageJson,
-          packageDir: getOutlinePath(packageName)
-        })
-      ]);
+      const packageDir = getOutlinePath(packageName);
+
+      await this.writeFile({
+        packageData,
+        packageJson,
+        packageDir: packageDir
+      });
+
+      publishSymLinkSync(packageName);
 
       logger.success(`Package published: ${packageName}@${version}`);
 
@@ -79,7 +76,7 @@ class PublishPack {
         packageName,
         version,
         publishPath: getPublishPath(packageName),
-        cachePath: getOutlinePath(packageName)
+        cachePath: packageDir
       };
     } catch (error) {
       logger.error(`Publish failed: ${error.message}`);
