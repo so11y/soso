@@ -17,7 +17,7 @@ class ReadPack {
       throw new Error("package not found");
     }
 
-    const packageInfo = fs.readJsonSync(findPack, "utf-8");
+    const packageInfo = fs.readJsonSync(maybeHaveOutsidePackagePath, "utf-8");
     overwriteTarBall(packageInfo);
     return JSON.stringify(packageInfo);
   }
