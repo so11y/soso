@@ -2,7 +2,7 @@ FROM node 22.22.0
 
 WORKDIR /app
 
-COPY ..
+COPY . .
 
 EXPOSE 4873
 
