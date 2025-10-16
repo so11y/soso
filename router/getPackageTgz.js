@@ -14,7 +14,7 @@ function getByTgz(packageName, fileNameAndVersion, req, res, next) {
   }
 
   const versionMatch = fileNameAndVersion.match(
-    /-(\d+\.\d+\.\d+(?:-\w+)?)\.tgz$/
+    /-(\d+\.\d+\.\d+(?:-(?:[0-9a-zA-Z-]+)(?:\.[0-9a-zA-Z-]+)*)?)\.tgz$/
   );
   if (versionMatch) {
     getTgz(packageName, versionMatch[1], req, res);
