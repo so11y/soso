@@ -62,7 +62,7 @@ class WritePack {
     return jsonInfo;
   }
 
-  async writeOutsideTgz(packageName, version) {
+  async writeOutsideTgz(packageName, version, updatePackage) {
     let attempt = 0;
     const { withComplete, createStream, pipe } = createWriteStream();
     const [hasExist, maybeHaveOutsidePackagePath] = getTgzPath(
@@ -70,7 +70,7 @@ class WritePack {
       version
     );
     const hasCachePackJSON = hasOutside(packageName);
-    if (!hasCachePackJSON) {
+    if (!hasCachePackJSON || updatePackage) {
       await this.writeInfo(packageName);
     }
     if (hasExist) {

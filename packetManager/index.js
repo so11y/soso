@@ -15,9 +15,9 @@ class PackageManager {
     );
   }
 
-  getTgz(packageName, version) {
+  getTgz(packageName, version, updatePackage) {
     return whereEnvironment(
-      () => this.writePack.writeOutsideTgz(packageName, version),
+      () => this.writePack.writeOutsideTgz(packageName, version, updatePackage),
       () => this.readPack.readTgz(packageName, version)
     );
   }

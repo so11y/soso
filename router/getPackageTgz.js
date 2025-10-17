@@ -1,8 +1,8 @@
-async function getTgz(packageName, version, req, res) {
+async function getTgz(packageName, version, req, res, updatePackage = false) {
   const { manager, logger } = req;
   logger.packageName(`${packageName}/${version}.tgz`);
   try {
-    const path = await manager.getTgz(packageName, version);
+    const path = await manager.getTgz(packageName, version, updatePackage);
     res.sendFile(path);
   } catch (error) {
     res.status(404).send("Package not found");
@@ -17,7 +17,7 @@ function getByTgz(packageName, fileNameAndVersion, req, res, next) {
     /-(\d+\.\d+\.\d+(?:-(?:[0-9a-zA-Z-]+)(?:\.[0-9a-zA-Z-]+)*)?)\.tgz$/
   );
   if (versionMatch) {
-    getTgz(packageName, versionMatch[1], req, res);
+    getTgz(packageName, versionMatch[1], req, res, true);
   } else {
     res.status(500).send("invalid tgz path");
   }
