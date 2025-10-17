@@ -26,9 +26,9 @@ app.use((req, _res, next) => {
 app.use(createLog);
 
 installLoginRouter(app);
-installPackInfoRouter(app);
 installTgzRouter(app);
 installPublishRouter(app);
 installSecurityRouter(app);
+installPackInfoRouter(app);
 
 app.listen(process.env.SERVER_PORT, listener);
