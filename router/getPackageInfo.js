@@ -12,6 +12,6 @@ async function getPackageInfo(req, res) {
 
 module.exports = {
   installPackInfoRouter(app) {
-    app.get("/:packageName", getPackageInfo);
+    app.get("/:packageName(*)", getPackageInfo);
   }
 };

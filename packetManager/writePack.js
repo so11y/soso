@@ -69,13 +69,13 @@ class WritePack {
       packageName,
       version
     );
-    const hasCachePackJSON = hasOutside(packageName);
-    if (!hasCachePackJSON || updatePackage) {
-      await this.writeInfo(packageName);
-    }
     if (hasExist) {
       logger.success(`Tgz cache: ${packageName}/${version}.tgz`);
       return hasExist;
+    }
+    const hasCachePackJSON = hasOutside(packageName);
+    if (!hasCachePackJSON || updatePackage) {
+      await this.writeInfo(packageName);
     }
     const downloadAndCreatePackagePath = async () => {
       while (attempt < MAX_RETRIES) {
