@@ -44,7 +44,7 @@ class PublishPack {
       const version = packageData["dist-tags"].latest;
 
       // 读取已存在的包信息（用于版本合并）
-      const perVersion = cratePerVersionJson(getPublishPath(packageName));
+      const perVersion = cratePerVersionJson(getOutlinePath(packageName));
 
       // 构建 package.json 数据
       const packageJson = {
