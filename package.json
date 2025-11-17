@@ -2,8 +2,8 @@
   "version": "1.0.0",
   "description": "轻量级的 npm registry 服务。",
   "scripts": {
-    "pm2:outside": "cross-env SERVER_ENV=outside && pm2 start ./index.js -i 4 --name npm-registry && npx pm2 logs npm-registry",
-    "pm2:inside": "cross-env SERVER_ENV=inside && pm2 start ./index.js -i 4 --name npm-registry && npx pm2 logs npm-registry",
+    "pm2:outside": "cross-env SERVER_ENV=outside && pm2-runtime ecosystem.config.js",
+    "pm2:inside": "cross-env SERVER_ENV=inside && pm2-runtime ecosystem.config.js",
     "outside": "cross-env SERVER_ENV=outside  node ./index.js",
     "inside": "cross-env SERVER_ENV=inside  node ./index.js"
   },
