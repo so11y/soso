@@ -7,7 +7,13 @@ module.exports = {
       exec_mode: "cluster",
       out_file: "/dev/null",
       error_file: "/dev/null",
-      log_file: "/dev/null"
+      log_file: "/dev/null",
+      env_outside: {
+        SERVER_ENV: "outside"
+      },
+      env_inside: {
+        SERVER_ENV: "inside"
+      }
     }
   ]
 };
