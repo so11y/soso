@@ -6,7 +6,7 @@ COPY . .
 
 EXPOSE 4873
 
-CMD ["npm","run","inside"]
+CMD ["npm","run","pm2:inside"]
 
 
 #docker build -t local-npm-registry . 
