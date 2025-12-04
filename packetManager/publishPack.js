@@ -15,17 +15,33 @@ class PublishPack {
 
     const packageJsonPath = path.join(packageDir, "package.json");
 
-    // 确保目录存在
     fs.ensureDirSync(packageDir);
 
-    // 写入 package.json
-    await fs.writeJson(
-      packageJsonPath,
-      overwriteTarBall(packageJson, process.env.INSIDE_SERVER_IP),
-      {
-        spaces: 2
-      }
+    const packageJsonFix = overwriteTarBall(
+      packageJson,
+      process.env.INSIDE_SERVER_IP
     );
+
+    let writeFileLike = fs.writeJson(packageJsonPath, packageJsonFix, {
+      spaces: 2
+    });
+
+    if (!packageJsonFix?.publishSOSO) {
+      writeFileLike = writeFileLike.then(() => {
+        return fs.writeJson(
+          fs.rename(
+            packageJsonPath,
+            path.join(packageDir, "Package_SOSO_Fallback.json")
+          ),
+          packageJsonFix,
+          {
+            spaces: 2
+          }
+        );
+      });
+    }
+
+    await writeFileLike;
 
     // 处理 tarball 附件
     const tarballName = Object.keys(packageData._attachments)[0];
@@ -43,11 +59,14 @@ class PublishPack {
       // 获取最新版本
       const version = packageData["dist-tags"].latest;
 
+      const filePath = getOutlinePath(packageName);
+
       // 读取已存在的包信息（用于版本合并）
-      const perVersion = cratePerVersionJson(getOutlinePath(packageName));
+      const perVersion = cratePerVersionJson(filePath);
 
       // 构建 package.json 数据
       const packageJson = {
+        publishSOSO: fs.existsSync(filePath) === false,
         name: packageData.name,
         version: version,
         "dist-tags": packageData["dist-tags"],
