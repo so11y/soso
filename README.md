@@ -7,6 +7,12 @@ soso 是一个用于内网环境的轻量级 npm registry 服务，允许您在�
 - 内网和外网环境下的 npm install 支持。
 - 支持软链接机制，如果主包不存在，则将今天新增的包软链接到 day 包，方便内网环境快速获取当天新增的依赖包。
 
+## 包存储
+
+- `pack/publish`：本地发布包的真实目录。
+- `pack/outline`：外网依赖缓存目录。
+- 同名包合并双方版本；相同版本使用 `outline`，缺少的版本从 `publish` 补充。
+
 ## 配置 npm registry
 
 将 npm 的 registry 配置为 soso 提供的地址，以便在内网环境中使用。

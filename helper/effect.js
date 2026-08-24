@@ -2,7 +2,7 @@ const { PassThrough } = require("stream");
 const { logger } = require("./log");
 const path = require("path");
 const fs = require("fs-extra");
-const { getDayPath, getOutlinePath, getPublishPath } = require("./share");
+const { getDayPath, getOutlinePath } = require("./share");
 
 function createWriteStream() {
   const passThrough = new PassThrough();
@@ -37,13 +37,6 @@ function daySymLinkSync(packageName) {
   return createSymLinkSync(linkPath, targetPath);
 }
 
-function publishSymLinkSync(packageName) {
-  const [targetName] = packageName.split(path.posix.sep);
-  const linkPath = getPublishPath(targetName);
-  const targetPath = getOutlinePath(targetName);
-  return createSymLinkSync(linkPath, targetPath);
-}
-
 function createSymLinkSync(linkPath, targetPath) {
   if (!fs.existsSync(targetPath)) {
     return;
@@ -72,6 +65,5 @@ module.exports = {
   createWriteStream,
   createSymLinkSync,
   overwriteTarBall,
-  daySymLinkSync,
-  publishSymLinkSync
+  daySymLinkSync
 };

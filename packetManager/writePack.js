@@ -3,12 +3,11 @@ const fs = require("fs-extra");
 const { requireImpl, getTgz } = require("../helper/request");
 const { logger } = require("../helper/log");
 const { MAX_RETRIES } = require("../helper/const");
+const { mergePackageInfo } = require("../helper/packageInfo");
 const {
   getOutlinePath,
-  getLocalPath,
-  getDayPath,
   hasOutside,
-  getTgzPath
+  findPackageFile
 } = require("../helper/share");
 const {
   createWriteStream,
@@ -25,33 +24,31 @@ class WritePack {
     return fs.outputFile(path.join(packPath, `package.json`), data);
   }
 
-  // writeLocalInfo(packName, data) {
-  //   return this._writeInfo(getLocalPath(packName), data);
-  // }
-
   writeOutlineInfo(packName, data) {
     return this._writeInfo(getOutlinePath(packName), data);
   }
 
-  // writeTodayInfo(packName, data) {
-  //   return this._writeInfo(getDayPath(packName), data);
-  // }
-
   async writeInfo(packageName) {
-    const hasLocalPublish = await this.packetManager.getPublishedInfo(
+    const publishedInfo = await this.packetManager.getPublishedInfo(
       packageName
     );
-    if (hasLocalPublish) {
-      return JSON.stringify(overwriteTarBall(packageInfo));
+
+    let outlineInfo;
+    try {
+      const response = await requireImpl.get(packageName);
+      outlineInfo = response.data;
+    } catch (error) {
+      if (!publishedInfo) {
+        throw error;
+      }
+      return JSON.stringify(overwriteTarBall(publishedInfo));
     }
 
-    const { data: packageInfo } = await requireImpl.get(packageName);
-    const jsonInfo = JSON.stringify(overwriteTarBall(packageInfo));
     const hasCache = hasOutside(packageName);
     await this.writeOutlineInfo(
       packageName,
       JSON.stringify(
-        overwriteTarBall(JSON.parse(jsonInfo), process.env.INSIDE_SERVER_IP),
+        overwriteTarBall(outlineInfo, process.env.INSIDE_SERVER_IP),
         null,
         4
       )
@@ -59,20 +56,22 @@ class WritePack {
     if (!hasCache) {
       daySymLinkSync(packageName);
     }
-    return jsonInfo;
+
+    const packageInfo = mergePackageInfo(publishedInfo, outlineInfo);
+    return JSON.stringify(overwriteTarBall(packageInfo));
   }
 
   async writeOutsideTgz(packageName, version, updatePackage) {
     let attempt = 0;
     const { withComplete, createStream, pipe } = createWriteStream();
-    const [hasExist, maybeHaveOutsidePackagePath] = getTgzPath(
-      packageName,
-      version
-    );
-    if (hasExist) {
+    const packagePath = findPackageFile(packageName, `${version}.tgz`);
+    if (packagePath) {
       logger.success(`Tgz cache: ${packageName}/${version}.tgz`);
-      return hasExist;
+      return packagePath;
     }
+    const outlinePackagePath = getOutlinePath(
+      path.join(packageName, `${version}.tgz`)
+    );
     const hasCachePackJSON = hasOutside(packageName);
     if (!hasCachePackJSON || updatePackage) {
       await this.writeInfo(packageName);
@@ -89,8 +88,8 @@ class WritePack {
           if (!hasOutside(packageName, version)) {
             daySymLinkSync(packageName);
           }
-          createStream(maybeHaveOutsidePackagePath);
-          return maybeHaveOutsidePackagePath;
+          createStream(outlinePackagePath);
+          return outlinePackagePath;
         } catch (error) {
           if (attempt >= MAX_RETRIES) {
             logger.error(`Download tgz: ${error.message}`);

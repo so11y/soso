@@ -1,13 +1,18 @@
 const fs = require("fs-extra");
 const dotenv = require("dotenv");
-const { PACK_DIR } = require("./helper/const");
 const { logger } = require("./helper/log");
-const { getDayPath, isOutside } = require("./helper/share");
+const {
+  getDayPath,
+  getOutlinePath,
+  getPublishPath,
+  isOutside
+} = require("./helper/share");
 
 function setup() {
   const env = process.env.SERVER_ENV || "outside";
   dotenv.config({ path: `.env.${env}` });
-  fs.ensureDirSync(PACK_DIR);
+  fs.ensureDirSync(getOutlinePath());
+  fs.ensureDirSync(getPublishPath());
   if (isOutside()) {
     fs.ensureDirSync(getDayPath());
   }

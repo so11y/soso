@@ -1,47 +1,23 @@
 const path = require("path");
 const fs = require("fs-extra");
-const { cratePerVersionJson } = require("../helper/publish");
-const { getOutlinePath, getPublishPath } = require("../helper/share");
+const { getPublishPath } = require("../helper/share");
 const { logger } = require("../helper/log");
-const { publishSymLinkSync, overwriteTarBall } = require("../helper/effect");
+const { overwriteTarBall } = require("../helper/effect");
 
 class PublishPack {
-  constructor(packetManager) {
-    this.packetManager = packetManager;
-  }
-
   async writeFile(options) {
     const { packageDir, packageJson, packageData } = options;
 
     const packageJsonPath = path.join(packageDir, "package.json");
 
-    fs.ensureDirSync(packageDir);
-
-    const packageJsonFix = overwriteTarBall(
+    const publishedInfo = overwriteTarBall(
       packageJson,
       process.env.INSIDE_SERVER_IP
     );
 
-    let writeFileLike = fs.writeJson(packageJsonPath, packageJsonFix, {
+    await fs.writeJson(packageJsonPath, publishedInfo, {
       spaces: 2
     });
-
-    if (!packageJsonFix?.publishSOSO) {
-      writeFileLike = writeFileLike.then(() => {
-        return fs.writeJson(
-          fs.rename(
-            packageJsonPath,
-            path.join(packageDir, "Package_SOSO_Fallback.json")
-          ),
-          packageJsonFix,
-          {
-            spaces: 2
-          }
-        );
-      });
-    }
-
-    await writeFileLike;
 
     // 处理 tarball 附件
     const tarballName = Object.keys(packageData._attachments)[0];
@@ -55,58 +31,32 @@ class PublishPack {
   }
 
   async publish(packageName, packageData) {
-    try {
-      // 获取最新版本
-      const version = packageData["dist-tags"].latest;
+    const version = packageData["dist-tags"].latest;
+    const packageDir = getPublishPath(packageName);
 
-      const filePath = getOutlinePath(packageName);
+    await fs.ensureDir(packageDir);
+    const publishedPackage = (await this.getPublishedInfo(packageName)) || {};
+    const packageJson = {
+      name: packageData.name,
+      version,
+      "dist-tags": packageData["dist-tags"],
+      versions: {
+        ...publishedPackage.versions,
+        ...packageData.versions
+      }
+    };
 
-      // 读取已存在的包信息（用于版本合并）
-      const perVersion = cratePerVersionJson(filePath);
+    await this.writeFile({ packageData, packageJson, packageDir });
 
-      // 构建 package.json 数据
-      const packageJson = {
-        publishSOSO: fs.existsSync(filePath) === false,
-        name: packageData.name,
-        version: version,
-        "dist-tags": packageData["dist-tags"],
-        versions: {
-          ...perVersion.versions,
-          ...packageData.versions
-        }
-      };
+    logger.success(`Package published: ${packageName}@${version}`);
 
-      // 更新所有版本的 tarball URL
-      Object.keys(packageJson.versions).forEach((version) => {
-        packageJson.versions[
-          version
-        ].dist.tarball = `${process.env.SERVER_IP}/package/${packageName}/${version}`;
-      });
-
-      const packageDir = getOutlinePath(packageName);
-
-      await this.writeFile({
-        packageData,
-        packageJson,
-        packageDir: packageDir
-      });
-
-      publishSymLinkSync(packageName);
-
-      logger.success(`Package published: ${packageName}@${version}`);
-
-      return {
-        success: true,
-        message: "Package published successfully!",
-        packageName,
-        version,
-        publishPath: getPublishPath(packageName),
-        cachePath: packageDir
-      };
-    } catch (error) {
-      logger.error(`Publish failed: ${error.message}`);
-      throw new Error(`Publish failed: ${error.message}`);
-    }
+    return {
+      success: true,
+      message: "Package published successfully!",
+      packageName,
+      version,
+      publishPath: packageDir
+    };
   }
 
   async getPublishedInfo(packageName) {

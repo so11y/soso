@@ -2,6 +2,7 @@
   "version": "1.0.0",
   "description": "轻量级的 npm registry 服务。",
   "scripts": {
+    "test": "node --test",
     "pm2:outside": "pm2-runtime ecosystem.config.js --env outside",
     "pm2:inside": "pm2-runtime ecosystem.config.js --env inside",
     "outside": "cross-env SERVER_ENV=outside  node ./index.js",

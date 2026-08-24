@@ -1,31 +1,36 @@
 const path = require("path");
 const fs = require("fs-extra");
-const { getOutlinePath, getTgzPath } = require("../helper/share");
+const {
+  findPackageFile,
+  getOutlinePath,
+  getPublishPath
+} = require("../helper/share");
 const { overwriteTarBall } = require("../helper/effect");
+const { mergePackageInfo } = require("../helper/packageInfo");
+
+function readPackageInfo(packagePath) {
+  return fs.existsSync(packagePath) ? fs.readJsonSync(packagePath) : null;
+}
 
 class ReadPack {
-  constructor(packetManager) {
-    this.packetManager = packetManager;
-  }
-
   readInfo(packageName) {
-    const maybeHaveOutsidePackagePath = getOutlinePath(
-      path.join(packageName, "package.json")
-    );
+    const packageFile = path.join(packageName, "package.json");
+    const outlineInfo = readPackageInfo(getOutlinePath(packageFile));
+    const publishedInfo = readPackageInfo(getPublishPath(packageFile));
+    const packageInfo = mergePackageInfo(publishedInfo, outlineInfo);
 
-    if (!fs.existsSync(maybeHaveOutsidePackagePath)) {
+    if (!packageInfo) {
       throw new Error("package not found");
     }
 
-    const packageInfo = fs.readJsonSync(maybeHaveOutsidePackagePath, "utf-8");
     overwriteTarBall(packageInfo);
     return JSON.stringify(packageInfo);
   }
 
   readTgz(packageName, version) {
-    const [hasExist] = getTgzPath(packageName, version);
-    if (hasExist) {
-      return hasExist;
+    const packagePath = findPackageFile(packageName, `${version}.tgz`);
+    if (packagePath) {
+      return packagePath;
     }
     throw new Error("package not found");
   }

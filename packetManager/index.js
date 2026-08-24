@@ -5,8 +5,8 @@ const { whereEnvironment } = require("../helper/share");
 
 class PackageManager {
   writePack = new WritePack(this);
-  readPack = new ReadPack(this);
-  publishPack = new PublishPack(this);
+  readPack = new ReadPack();
+  publishPack = new PublishPack();
 
   getInfo(packageName) {
     return whereEnvironment(
@@ -22,12 +22,16 @@ class PackageManager {
     );
   }
 
-  async publish(packageName, version, packageData) {
-    return this.publishPack.publish(packageName, version, packageData);
+  async publish(packageName, packageData) {
+    return this.publishPack.publish(packageName, packageData);
   }
 
   async getPublishedInfo(packageName) {
     return this.publishPack.getPublishedInfo(packageName);
+  }
+
+  async listPublished() {
+    return this.publishPack.listPublished();
   }
 }
 
