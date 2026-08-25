@@ -1,3 +1,5 @@
+const semver = require("semver");
+
 function mergePackageInfo(publishedInfo, outlineInfo) {
   if (!publishedInfo) {
     return outlineInfo;
@@ -6,12 +8,19 @@ function mergePackageInfo(publishedInfo, outlineInfo) {
     return publishedInfo;
   }
 
+  const [baseInfo, latestInfo] = semver.gt(
+    publishedInfo["dist-tags"].latest,
+    outlineInfo["dist-tags"].latest
+  )
+    ? [outlineInfo, publishedInfo]
+    : [publishedInfo, outlineInfo];
+
   return {
-    ...publishedInfo,
-    ...outlineInfo,
+    ...baseInfo,
+    ...latestInfo,
     "dist-tags": {
-      ...publishedInfo["dist-tags"],
-      ...outlineInfo["dist-tags"]
+      ...baseInfo["dist-tags"],
+      ...latestInfo["dist-tags"]
     },
     versions: {
       ...publishedInfo.versions,

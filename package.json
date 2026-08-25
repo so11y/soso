@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "pm2": "6.0.13",
+    "semver": "^7.7.2",
     "axios": "^1.7.2",
     "chalk": "^4.1.2",
     "cross-env": "^7.0.3",

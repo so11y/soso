@@ -133,6 +133,17 @@ test("outline metadata wins when both sources contain the same version", () => {
   assert.equal(packageInfo["dist-tags"].latest, "1.0.0");
 });
 
+test("newer published metadata wins over an older outline cache", () => {
+  const publishedInfo = createPackageInfo("@xnj/ui", "3.1.1");
+  const outlineInfo = createPackageInfo("@xnj/ui", "3.0.5");
+
+  const packageInfo = mergePackageInfo(publishedInfo, outlineInfo);
+
+  assert.equal(packageInfo.version, "3.1.1");
+  assert.equal(packageInfo["dist-tags"].latest, "3.1.1");
+  assert.deepEqual(Object.keys(packageInfo.versions), ["3.1.1", "3.0.5"]);
+});
+
 test("package metadata merges versions and tarballs prefer outline", async () => {
   const manager = new PackageManager();
   writePackageInfo("publish", "shared-package", "1.0.0-internal");

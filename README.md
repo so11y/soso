@@ -12,6 +12,7 @@ soso 是一个用于内网环境的轻量级 npm registry 服务，允许您在�
 - `pack/publish`：本地发布包的真实目录。
 - `pack/outline`：外网依赖缓存目录。
 - 同名包合并双方版本；相同版本使用 `outline`，缺少的版本从 `publish` 补充。
+- 查询最新版时比较双方的 `latest`，使用版本号较新的包元数据。
 
 ## 配置 npm registry
 
