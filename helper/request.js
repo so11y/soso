@@ -2,8 +2,7 @@ const axios = require("axios");
 
 const TIMEOUT = 8000;
 const requireImpl = axios.create({
-  // baseURL: "https://registry.npmjs.org/",
-  baseURL: "https://registry.npmmirror.com/",
+  baseURL: "https://registry.npmjs.org/",
   timeout: TIMEOUT,
 });
 
