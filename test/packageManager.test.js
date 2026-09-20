@@ -242,6 +242,34 @@ test("outside mode falls back to publish when the remote package is missing", as
   );
 });
 
+test("outside mode serves local publications when the upstream name was unpublished", async () => {
+  const manager = new PackageManager();
+  process.env.SERVER_ENV = "outside";
+  process.env.SERVER_IP = "http://outside.registry";
+  requireImpl.get = async () => ({
+    data: {
+      name: "previously-unpublished",
+      time: { unpublished: { time: "2015-11-19T04:36:12.791Z", versions: ["0.0.0"] } },
+      _attachments: {}
+    }
+  });
+
+  await assert.rejects(manager.getInfo("previously-unpublished"));
+  for (const version of ["1.0.0", "1.1.0"]) {
+    await manager.publish(
+      "previously-unpublished",
+      createPackageData("previously-unpublished", version)
+    );
+    const info = JSON.parse(await manager.getInfo("previously-unpublished"));
+    assert.equal(info["dist-tags"].latest, version);
+    assert.equal(
+      info.versions[version].dist.tarball,
+      `http://outside.registry/package/previously-unpublished/${version}`
+    );
+  }
+  assert.equal(fs.existsSync(path.join("pack", "outline", "previously-unpublished", "package.json")), false);
+});
+
 test("outside mode caches only outline and merges published versions in the response", async () => {
   const manager = new PackageManager();
   process.env.SERVER_ENV = "outside";

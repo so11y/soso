@@ -44,6 +44,13 @@ class WritePack {
       return JSON.stringify(overwriteTarBall(publishedInfo));
     }
 
+    if (outlineInfo.time?.unpublished) {
+      if (!publishedInfo) {
+        throw new Error("Package not found");
+      }
+      return JSON.stringify(overwriteTarBall(publishedInfo));
+    }
+
     const hasCache = hasOutside(packageName);
     await this.writeOutlineInfo(
       packageName,
