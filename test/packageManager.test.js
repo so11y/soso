@@ -2,12 +2,16 @@ const assert = require("node:assert/strict");
 const fs = require("fs-extra");
 const os = require("node:os");
 const path = require("node:path");
+const express = require("express");
+const { once } = require("node:events");
 const { afterEach, beforeEach, test } = require("node:test");
 
 const PackageManager = require("../packetManager");
 const setup = require("../setup");
 const { requireImpl } = require("../helper/request");
 const { mergePackageInfo } = require("../helper/packageInfo");
+const { installPackInfoRouter } = require("../router/getPackageInfo");
+const { installTgzRouter } = require("../router/getPackageTgz");
 
 const originalCwd = process.cwd();
 const originalEnv = {
@@ -144,6 +148,25 @@ test("newer published metadata wins over an older outline cache", () => {
   assert.deepEqual(Object.keys(packageInfo.versions), ["3.1.1", "3.0.5"]);
 });
 
+test("exact versions retain their complete metadata independently of latest", () => {
+  const publishedInfo = createPackageInfo("vue", "3.5.19");
+  publishedInfo.versions["3.5.19"].peerDependencies = { stale: "1.0.0" };
+  const outlineInfo = createPackageInfo("vue", "3.5.43");
+  const exact = createPackageInfo("vue", "3.5.19").versions["3.5.19"];
+  exact.dependencies = { "@vue/shared": "3.5.19" };
+  exact.dist.integrity = "sha512-exact-artifact";
+  outlineInfo.versions["3.5.19"] = exact;
+
+  for (const published of [null, publishedInfo]) {
+    const packageInfo = mergePackageInfo(published, outlineInfo);
+    assert.equal(packageInfo["dist-tags"].latest, "3.5.43");
+    assert.deepEqual(packageInfo.versions["3.5.19"], exact);
+    assert.equal(packageInfo.versions["3.5.19"].version, "3.5.19");
+    assert.equal(packageInfo.versions["3.5.43"].version, "3.5.43");
+    assert.equal(packageInfo.versions["3.5.19"].peerDependencies, undefined);
+  }
+});
+
 test("package metadata merges versions and tarballs prefer outline", async () => {
   const manager = new PackageManager();
   writePackageInfo("publish", "shared-package", "1.0.0-internal");
@@ -240,6 +263,79 @@ test("outside mode falls back to publish when the remote package is missing", as
     packageInfo.versions["3.0.0-internal"].dist.tarball,
     "http://outside.registry/package/published-package/3.0.0-internal"
   );
+});
+
+test("outside mode falls back to a cached scoped package when upstream returns 404", async () => {
+  const manager = new PackageManager();
+  process.env.SERVER_ENV = "outside";
+  process.env.SERVER_IP = "http://outside.registry";
+  writePackageInfo("outline", "@fulate/core", "1.0.14");
+  requireImpl.get = async () => {
+    const error = new Error("Package not found");
+    error.response = { status: 404 };
+    throw error;
+  };
+
+  const packageInfo = JSON.parse(await manager.getInfo("@fulate/core"));
+
+  assert.equal(packageInfo.name, "@fulate/core");
+  assert.equal(packageInfo.version, "1.0.14");
+  assert.equal(
+    packageInfo.versions["1.0.14"].dist.tarball,
+    "http://outside.registry/package/@fulate/core/1.0.14"
+  );
+});
+
+test("upstream 404 retains both cached and published versions, then a successful refresh wins", async () => {
+  const manager = new PackageManager();
+  process.env.SERVER_ENV = "outside";
+  writePackageInfo("outline", "@fulate/core", "1.0.14");
+  writePackageInfo("publish", "@fulate/core", "1.0.15");
+  requireImpl.get = async () => {
+    throw Object.assign(new Error("upstream missing"), { response: { status: 404 } });
+  };
+  const file = path.join("pack", "outline", "@fulate/core", "package.json");
+  const cached = fs.readFileSync(file, "utf8");
+  const offline = JSON.parse(await manager.getInfo("@fulate/core"));
+  assert.deepEqual(Object.keys(offline.versions), ["1.0.15", "1.0.14"]);
+  assert.equal(offline["dist-tags"].latest, "1.0.15");
+  assert.equal(fs.readFileSync(file, "utf8"), cached);
+
+  requireImpl.get = async () => ({ data: createPackageInfo("@fulate/core", "1.0.16") });
+  const refreshed = JSON.parse(await manager.getInfo("@fulate/core"));
+  assert.deepEqual(Object.keys(refreshed.versions), ["1.0.15", "1.0.16"]);
+  assert.equal(refreshed["dist-tags"].latest, "1.0.16");
+  assert.equal(fs.readJsonSync(file)["dist-tags"].latest, "1.0.16");
+});
+
+test("metadata HTTP serves a cached scoped package and its exact tarball", async () => {
+  const manager = new PackageManager();
+  const app = express();
+  const logger = { packageName() {} };
+  app.use((req, _res, next) => { req.manager = manager; req.logger = logger; next(); });
+  installTgzRouter(app);
+  installPackInfoRouter(app);
+  const server = app.listen(0, "127.0.0.1");
+  try {
+    await once(server, "listening");
+    const base = `http://127.0.0.1:${server.address().port}`;
+    process.env.SERVER_IP = base;
+    process.env.SERVER_ENV = "outside";
+    writePackageInfo("outline", "@fulate/core", "1.0.14");
+    fs.outputFileSync(path.join("pack", "outline", "@fulate/core", "1.0.14.tgz"), "fixture artifact");
+    requireImpl.get = async () => { throw Object.assign(new Error("upstream missing"), { response: { status: 404 } }); };
+    for (const encoded of ["@fulate%2fcore", "@fulate%2Fcore", "@fulate/core"]) {
+      const response = await fetch(`${base}/${encoded}`);
+      assert.equal(response.status, 200);
+      const info = await response.json();
+      const artifact = await fetch(info.versions["1.0.14"].dist.tarball);
+      assert.equal(artifact.status, 200);
+      assert.equal(await artifact.text(), "fixture artifact");
+    }
+
+  } finally {
+    await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+  }
 });
 
 test("outside mode serves local publications when the upstream name was unpublished", async () => {

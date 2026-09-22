@@ -32,6 +32,12 @@ class WritePack {
     const publishedInfo = await this.packetManager.getPublishedInfo(
       packageName
     );
+    const outlinePath = getOutlinePath(
+      path.join(packageName, "package.json")
+    );
+    const cachedOutlineInfo = fs.existsSync(outlinePath)
+      ? fs.readJsonSync(outlinePath)
+      : null;
 
     let outlineInfo;
     try {
@@ -39,7 +45,15 @@ class WritePack {
       outlineInfo = response.data;
     } catch (error) {
       if (!publishedInfo) {
+        if (cachedOutlineInfo && error.response?.status === 404) {
+          return JSON.stringify(overwriteTarBall(cachedOutlineInfo));
+        }
         throw error;
+      }
+      if (cachedOutlineInfo && error.response?.status === 404) {
+        return JSON.stringify(
+          overwriteTarBall(mergePackageInfo(publishedInfo, cachedOutlineInfo))
+        );
       }
       return JSON.stringify(overwriteTarBall(publishedInfo));
     }
